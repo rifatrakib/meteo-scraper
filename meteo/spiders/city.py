@@ -1,6 +1,8 @@
 import scrapy
 from scrapy.http import Request
 
+from meteo.utils import xpath_mapping
+
 
 class CitySpider(scrapy.Spider):
     name = "city"
@@ -13,6 +15,9 @@ class CitySpider(scrapy.Spider):
     def parse_country_list(self, response):
         links = response.xpath('//*[@id="mw-content-text"]/div/ul/li/b/a/@href').getall()
         for link in links:
+            country = link.replace("/wiki/List_of_cities_in_", "").replace("_", " ")
+            if country not in xpath_mapping:
+                continue
             yield response.follow(link, callback=self.parse_cities_by_country)
 
     def parse_cities_by_country(self, response):
