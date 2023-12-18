@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 scrapy = "^2.11.0"
-pydantic = "^2.4.2"
+pydantic = "^2.5.2"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.5.0"

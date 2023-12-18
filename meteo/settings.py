@@ -1,5 +1,3 @@
-import json
-
 BOT_NAME = "meteo"
 
 SPIDER_MODULES = ["meteo.spiders"]
@@ -84,10 +82,3 @@ TELNETCONSOLE_ENABLED = False
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
-
-CITIES = []
-with open("static/countries-states-cities.json", encoding="utf-8") as reader:
-    for country in json.loads(reader.read()):
-        for state in country["states"]:
-            for city in state["cities"]:
-                CITIES.append(city["name"])
