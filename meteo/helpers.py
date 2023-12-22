@@ -1,6 +1,7 @@
 import json
 from functools import lru_cache
 
+from meteo import settings
 from meteo.items import LocationModel, MetricsModel, WeatherItem
 
 
@@ -12,6 +13,9 @@ def read_locations() -> list[LocationModel]:
 
     locations = []
     for country in countries:
+        if country["name"] != settings.TARGET_COUNTRY:
+            continue
+
         for state in country["states"]:
             for city in state["cities"]:
                 locations.append(

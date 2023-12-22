@@ -1,7 +1,9 @@
+from datetime import date
 from urllib.parse import urlencode
 
 import scrapy
 
+from meteo import settings
 from meteo.helpers import read_locations, reshape_weather_data
 from meteo.items import LocationModel, WeatherModel
 
@@ -15,8 +17,8 @@ class WeatherSpider(scrapy.Spider):
 
     def start_requests(self):
         params = {
-            "start_date": "2023-01-01",
-            "end_date": "2023-11-30",
+            "start_date": settings.START_DATE,
+            "end_date": str(date.today()),
             "daily": ",".join(self.metrics),
         }
 
