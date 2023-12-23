@@ -20,8 +20,9 @@ def read_locations() -> list[LocationModel]:
             for city in state["cities"]:
                 locations.append(
                     LocationModel(
-                        city_name=city["name"],
-                        country_name=country["name"],
+                        city=city["name"],
+                        province=state["name"],
+                        country=country["name"],
                         latitude=city["latitude"],
                         longitude=city["longitude"],
                     ),

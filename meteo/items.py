@@ -12,8 +12,9 @@ class BaseSchema(BaseModel):
 
 
 class LocationModel(BaseSchema):
-    city_name: str
-    country_name: str
+    city: str
+    province: str
+    country: str
     latitude: float
     longitude: float
 
