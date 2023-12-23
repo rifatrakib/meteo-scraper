@@ -55,11 +55,9 @@ class WeatherSpider(scrapy.Spider):
                 )
 
     def parse(self, response, **kwargs):
-        print(f"{response.status = }")
         data = response.json()
         if self.is_daily:
             for index, item in enumerate(data):
-                print(f"{item = }")
                 yield WeatherModel(
                     location=kwargs.get("location")[index],
                     weather=reshape_weather_data(item["daily"]),
