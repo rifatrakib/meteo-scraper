@@ -1,8 +1,16 @@
 import json
+from enum import Enum
 from functools import lru_cache
 
 from meteo import settings
 from meteo.items import LocationModel, MetricsModel, WeatherItem
+
+
+class Modes(str, Enum):
+    """Modes for the weather spider."""
+
+    daily = "daily"
+    historical = "historical"
 
 
 @lru_cache()

@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 import scrapy
 
 from meteo import settings
-from meteo.helpers import read_locations, reshape_weather_data
+from meteo.helpers import Modes, read_locations, reshape_weather_data
 from meteo.items import LocationModel, WeatherModel
 
 
@@ -15,13 +15,17 @@ class WeatherSpider(scrapy.Spider):
     metrics = ["temperature_2m_mean", "apparent_temperature_mean", "rain_sum", "snowfall_sum"]
     locations: list[LocationModel] = read_locations()
 
-    def __init__(self, is_daily: bool = True, *args, **kwargs):
+    def __init__(self, mode: Modes = Modes.daily, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.is_daily = is_daily
+
+        if mode not in Modes.__members__.values():
+            raise KeyError
+
+        self.mode = mode
 
     def start_requests(self):
         params = {"daily": ",".join(self.metrics), "latitude": "", "longitude": ""}
-        if self.is_daily:
+        if self.mode == Modes.daily:
             start_date = end_date = str(date.today() - timedelta(days=2))
             params.update({"start_date": start_date, "end_date": end_date})
             cities = []
@@ -47,7 +51,15 @@ class WeatherSpider(scrapy.Spider):
         else:
             start_date, end_date = settings.HISTORICAL_DATE_RANGE
             for location in self.locations:
-                params.update({"latitude": location.latitude, "longitude": location.longitude})
+                params.update(
+                    {
+                        "latitude": location.latitude,
+                        "longitude": location.longitude,
+                        "start_date": start_date,
+                        "end_date": end_date,
+                    }
+                )
+
                 yield scrapy.Request(
                     f"{self.target_endpoint}?{urlencode(params)}",
                     callback=self.parse,
@@ -56,7 +68,7 @@ class WeatherSpider(scrapy.Spider):
 
     def parse(self, response, **kwargs):
         data = response.json()
-        if self.is_daily:
+        if self.mode == Modes.daily:
             for index, item in enumerate(data):
                 yield WeatherModel(
                     location=kwargs.get("location")[index],
