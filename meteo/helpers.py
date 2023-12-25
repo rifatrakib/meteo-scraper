@@ -1,4 +1,5 @@
 import json
+from datetime import date, timedelta
 from enum import Enum
 from functools import lru_cache
 
@@ -11,6 +12,40 @@ class Modes(str, Enum):
 
     daily = "daily"
     historical = "historical"
+
+
+def prepare_daily_mode_query_params(metrics: list[str], locations: list[LocationModel]) -> tuple[dict[str, str], list[LocationModel]]:
+    """Prepare the query parameters for the daily mode."""
+    cities = []
+    start_date = end_date = str(date.today() - timedelta(days=2))
+    params = {
+        "daily": ",".join(metrics),
+        "start_date": start_date,
+        "end_date": end_date,
+        "latitude": "",
+        "longitude": "",
+    }
+
+    for location in locations:
+        cities.append(location)
+        params["latitude"] += f"{location.latitude},"
+        params["longitude"] += f"{location.longitude},"
+
+    params["latitude"] = params["latitude"][:-1]
+    params["longitude"] = params["longitude"][:-1]
+    return params, cities
+
+
+def prepare_historical_mode_query_params(metrics: list[str], location: LocationModel) -> dict[str, str]:
+    """Prepare the query parameters for the historical mode."""
+    start_date, end_date = settings.HISTORICAL_DATE_RANGE
+    return {
+        "daily": ",".join(metrics),
+        "start_date": start_date,
+        "end_date": end_date,
+        "latitude": location.latitude,
+        "longitude": location.longitude,
+    }
 
 
 @lru_cache()

@@ -1,10 +1,8 @@
-from datetime import date, timedelta
 from urllib.parse import urlencode
 
 import scrapy
 
-from meteo import settings
-from meteo.helpers import Modes, read_locations, reshape_weather_data
+from meteo.helpers import Modes, prepare_daily_mode_query_params, prepare_historical_mode_query_params, read_locations, reshape_weather_data
 from meteo.items import LocationModel, WeatherModel
 
 
@@ -24,42 +22,17 @@ class WeatherSpider(scrapy.Spider):
         self.mode = mode
 
     def start_requests(self):
-        params = {"daily": ",".join(self.metrics), "latitude": "", "longitude": ""}
         if self.mode == Modes.daily:
-            start_date = end_date = str(date.today() - timedelta(days=2))
-            params.update({"start_date": start_date, "end_date": end_date})
-            cities = []
-
-            for index, location in enumerate(self.locations):
-                cities.append(location)
-                params["latitude"] += f"{location.latitude},"
-                params["longitude"] += f"{location.longitude},"
-
-                if (index + 1) % 10 == 0:
-                    params["latitude"] = params["latitude"][:-1]
-                    params["longitude"] = params["longitude"][:-1]
-
-                    yield scrapy.Request(
-                        f"{self.target_endpoint}?{urlencode(params)}",
-                        callback=self.parse,
-                        cb_kwargs={"location": cities},
-                    )
-
-                    params["latitude"] = ""
-                    params["longitude"] = ""
-                    cities = []
-        else:
-            start_date, end_date = settings.HISTORICAL_DATE_RANGE
-            for location in self.locations:
-                params.update(
-                    {
-                        "latitude": location.latitude,
-                        "longitude": location.longitude,
-                        "start_date": start_date,
-                        "end_date": end_date,
-                    }
+            for index in range(0, len(self.locations), 10):
+                params, cities = prepare_daily_mode_query_params(self.metrics, self.locations[index : index + 10])
+                yield scrapy.Request(
+                    f"{self.target_endpoint}?{urlencode(params)}",
+                    callback=self.parse,
+                    cb_kwargs={"location": cities},
                 )
-
+        else:
+            for location in self.locations:
+                params = prepare_historical_mode_query_params(self.metrics, location)
                 yield scrapy.Request(
                     f"{self.target_endpoint}?{urlencode(params)}",
                     callback=self.parse,
