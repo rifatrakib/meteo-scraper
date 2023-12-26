@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import Union
 from urllib.parse import urlencode
 
 import scrapy
@@ -13,7 +15,14 @@ class WeatherSpider(scrapy.Spider):
     metrics = ["temperature_2m_mean", "apparent_temperature_mean", "rain_sum", "snowfall_sum"]
     locations: list[LocationModel] = read_locations()
 
-    def __init__(self, mode: Modes = Modes.daily, *args, **kwargs):
+    def __init__(
+        self,
+        mode: Modes = Modes.daily,
+        start_date: Union[str, None] = None,
+        end_date: Union[str, None] = None,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
 
         if mode not in Modes.__members__.values():
@@ -21,10 +30,22 @@ class WeatherSpider(scrapy.Spider):
 
         self.mode = mode
 
+        if start_date and end_date:
+            self.start_date = datetime.fromisoformat(start_date)
+            self.end_date = datetime.fromisoformat(end_date)
+            if self.start_date > self.end_date:
+                raise ValueError("Start date must be earlier than end date.")
+
     def start_requests(self):
         if self.mode == Modes.daily:
             for index in range(0, len(self.locations), 10):
-                params, cities = prepare_daily_mode_query_params(self.metrics, self.locations[index : index + 10])
+                params, cities = prepare_daily_mode_query_params(
+                    self.metrics,
+                    self.locations[index : index + 10],
+                    self.start_date.date(),
+                    self.end_date.date(),
+                )
+
                 yield scrapy.Request(
                     f"{self.target_endpoint}?{urlencode(params)}",
                     callback=self.parse,

@@ -2,6 +2,7 @@ import json
 from datetime import date, timedelta
 from enum import Enum
 from functools import lru_cache
+from typing import Union
 
 from meteo import settings
 from meteo.items import LocationModel, MetricsModel, WeatherItem
@@ -14,10 +15,20 @@ class Modes(str, Enum):
     historical = "historical"
 
 
-def prepare_daily_mode_query_params(metrics: list[str], locations: list[LocationModel]) -> tuple[dict[str, str], list[LocationModel]]:
+def prepare_daily_mode_query_params(
+    metrics: list[str],
+    locations: list[LocationModel],
+    start_date: Union[date, None] = None,
+    end_date: Union[date, None] = None,
+) -> tuple[dict[str, str], list[LocationModel]]:
     """Prepare the query parameters for the daily mode."""
     cities = []
-    start_date = end_date = str(date.today() - timedelta(days=2))
+    if not start_date:
+        start_date = end_date = str(date.today() - timedelta(days=2))
+    else:
+        start_date = str(start_date)
+        end_date = str(end_date)
+
     params = {
         "daily": ",".join(metrics),
         "start_date": start_date,
