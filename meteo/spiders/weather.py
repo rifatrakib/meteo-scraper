@@ -61,6 +61,9 @@ class WeatherSpider(scrapy.Spider):
                 )
 
     def parse(self, response, **kwargs):
+        if response.status != 200:
+            return
+
         data = response.json()
         if self.mode == Modes.daily:
             for index, item in enumerate(data):

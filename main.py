@@ -1,5 +1,6 @@
 import json
 import subprocess
+import time
 from datetime import datetime, timedelta
 
 from meteo import settings
@@ -24,4 +25,14 @@ def start_daily_scraper():
 
 
 if __name__ == "__main__":
-    start_daily_scraper()
+    while True:
+        start_daily_scraper()
+        time.sleep(5)
+
+        try:
+            with open("scraper-status.txt") as reader:
+                text = reader.read()
+                if text == "429":
+                    break
+        except Exception:
+            pass

@@ -4,6 +4,8 @@ from pathlib import Path
 
 from scrapy import signals
 
+from meteo import settings
+
 
 class MeteoPipeline:
     @classmethod
@@ -21,6 +23,9 @@ class MeteoPipeline:
         self.file.touch(exist_ok=True)
 
     def spider_closed(self, spider):
+        if settings.END_STATUS == 429:
+            return
+
         try:
             with open(self.file, "r", encoding="utf-8") as reader:
                 past_data = json.loads(reader.read())

@@ -1,10 +1,6 @@
-# Define here the models for your spider middleware
-#
-# See documentation in:
-# https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-
-# useful for handling different item types with a single interface
 from scrapy import signals
+
+from meteo import settings
 
 
 class MeteoSpiderMiddleware:
@@ -85,6 +81,13 @@ class MeteoDownloaderMiddleware:
         # - return a Response object
         # - return a Request object
         # - or raise IgnoreRequest
+        if response.status == 429:
+            spider.crawler.engine.close_spider(spider, reason="Received 429 status code, closing spider.")
+            settings.END_STATUS = response.status
+
+            with open("scraper-status.txt", "w") as writer:
+                writer.write("429")
+
         return response
 
     def process_exception(self, request, exception, spider):
