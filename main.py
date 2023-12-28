@@ -36,3 +36,6 @@ if __name__ == "__main__":
                     break
         except Exception:
             pass
+
+    with open("scraper-status.txt", "w") as writer:
+        writer.write("")

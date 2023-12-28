@@ -82,7 +82,6 @@ class MeteoDownloaderMiddleware:
         # - return a Request object
         # - or raise IgnoreRequest
         if response.status == 429:
-            spider.crawler.engine.close_spider(spider, reason="Received 429 status code, closing spider.")
             settings.END_STATUS = response.status
 
             with open("scraper-status.txt", "w") as writer:

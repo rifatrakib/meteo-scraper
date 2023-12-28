@@ -86,6 +86,7 @@ FEED_EXPORT_ENCODING = "utf-8"
 
 TARGET_COUNTRY = "China"
 TARGET_STORAGE = "database/downloads"
+LOG_STORAGE = "database/logs"
 HISTORICAL_DATE_RANGE = ["2021-01-01", "2023-12-21"]
 
 END_STATUS = 200

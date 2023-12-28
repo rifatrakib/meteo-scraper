@@ -1,9 +1,12 @@
+import json
 from datetime import datetime
+from pathlib import Path
 from typing import Union
 from urllib.parse import urlencode
 
 import scrapy
 
+from meteo import settings
 from meteo.helpers import Modes, prepare_daily_mode_query_params, prepare_historical_mode_query_params, read_locations, reshape_weather_data
 from meteo.items import LocationModel, WeatherModel
 
@@ -11,6 +14,7 @@ from meteo.items import LocationModel, WeatherModel
 class WeatherSpider(scrapy.Spider):
     name = "weather"
     allowed_domains = ["open-meteo.com"]
+    handle_httpstatus_list = [429]
     target_endpoint = "https://archive-api.open-meteo.com/v1/archive"
     metrics = ["temperature_2m_mean", "apparent_temperature_mean", "rain_sum", "snowfall_sum"]
     locations: list[LocationModel] = read_locations()
@@ -35,6 +39,19 @@ class WeatherSpider(scrapy.Spider):
             self.end_date = datetime.fromisoformat(end_date)
             if self.start_date > self.end_date:
                 raise ValueError("Start date must be earlier than end date.")
+
+    def closed(self, reason):
+        logfile = Path(f"{settings.LOG_STORAGE}/{self.name}.json")
+        logfile.parent.mkdir(parents=True, exist_ok=True)
+        stats = self.crawler.stats.get_stats()
+        stats["reason"] = reason
+
+        for key, value in stats.items():
+            if isinstance(value, datetime):
+                stats[key] = value.isoformat()
+
+        with open(logfile, "w") as writer:
+            writer.write(json.dumps(stats, indent=4))
 
     def start_requests(self):
         if self.mode == Modes.daily:
@@ -61,7 +78,8 @@ class WeatherSpider(scrapy.Spider):
                 )
 
     def parse(self, response, **kwargs):
-        if response.status != 200:
+        if response.status == 429:
+            self.crawler.engine.close_spider(self, reason=response.json())
             return
 
         data = response.json()

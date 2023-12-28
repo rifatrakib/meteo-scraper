@@ -17,8 +17,7 @@ class MeteoPipeline:
 
     def spider_opened(self, spider):
         self.data = []
-        self.target_storage = spider.settings.get("TARGET_STORAGE")
-        self.file = Path(f"{self.target_storage}/{spider.name}.json")
+        self.file = Path(f"{spider.settings.get('TARGET_STORAGE')}/{spider.name}.json")
         self.file.parent.mkdir(parents=True, exist_ok=True)
         self.file.touch(exist_ok=True)
 
