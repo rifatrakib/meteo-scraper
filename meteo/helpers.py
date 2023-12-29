@@ -2,7 +2,7 @@ import json
 from datetime import date, timedelta
 from enum import Enum
 from functools import lru_cache
-from typing import Union
+from typing import Any, Union
 
 from meteo import settings
 from meteo.items import LocationModel, MetricsModel, WeatherItem
@@ -103,3 +103,48 @@ def reshape_weather_data(data) -> list[WeatherItem]:
         )
 
     return weather_data
+
+
+def process_stat_output(data: dict[str, Any]) -> dict[str, Any]:
+    result = {
+        "log_count": {
+            "DEBUG": data["log_count/DEBUG"],
+            "INFO": data["log_count/INFO"],
+        },
+        "start_time": data["start_time"],
+        "finish_time": data["finish_time"],
+        "scheduler": {
+            "enqueued": {
+                "memory": data["scheduler/enqueued/memory"],
+                "total": data["scheduler/enqueued"],
+            },
+            "dequeued": {
+                "memory": data["scheduler/dequeued/memory"],
+                "total": data["scheduler/dequeued"],
+            },
+        },
+        "downloader": {
+            "request_count": data["downloader/request_count"],
+            "request_method_count": {
+                "GET": data["downloader/request_method_count/GET"],
+            },
+            "request_bytes": data["downloader/request_bytes"],
+            "response_count": data["downloader/response_count"],
+            "response_status_count": {
+                "200": data["downloader/response_status_count/200"],
+            },
+            "response_bytes": data["downloader/response_bytes"],
+        },
+        "httpcompression": {
+            "response_bytes": data["httpcompression/response_bytes"],
+            "response_count": data["httpcompression/response_count"],
+        },
+        "response_received_count": data["response_received_count"],
+        "item_scraped_count": data["item_scraped_count"],
+        "reason": data["reason"],
+    }
+
+    if "downloader/response_status_count/429" in data:
+        result["downloader"]["response_status_count"]["429"] = data["downloader/response_status_count/429"]
+
+    return result

@@ -30,12 +30,19 @@ if __name__ == "__main__":
         time.sleep(5)
 
         try:
-            with open("scraper-status.txt") as reader:
-                text = reader.read()
-                if text == "429":
-                    break
+            with open("database/logs/weather.json") as reader:
+                stats = json.loads(reader.read())
+
+            finish_time = datetime.fromisoformat(stats["finish_time"])
+            if finish_time.date() != datetime.utcnow().date():
+                continue
+            if "Hourly" in stats["reason"]:
+                print(stats["reason"])
+                print("Sleeping for an hour...")
+                time.sleep(3600)
+            elif "Daily" in stats["reason"]:
+                print(stats["reason"])
+                print("Stopping for today...")
+                break
         except Exception:
             pass
-
-    with open("scraper-status.txt", "w") as writer:
-        writer.write("")

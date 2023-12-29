@@ -7,7 +7,14 @@ from urllib.parse import urlencode
 import scrapy
 
 from meteo import settings
-from meteo.helpers import Modes, prepare_daily_mode_query_params, prepare_historical_mode_query_params, read_locations, reshape_weather_data
+from meteo.helpers import (
+    Modes,
+    prepare_daily_mode_query_params,
+    prepare_historical_mode_query_params,
+    process_stat_output,
+    read_locations,
+    reshape_weather_data,
+)
 from meteo.items import LocationModel, WeatherModel
 
 
@@ -45,13 +52,14 @@ class WeatherSpider(scrapy.Spider):
         logfile.parent.mkdir(parents=True, exist_ok=True)
         stats = self.crawler.stats.get_stats()
         stats["reason"] = reason
+        stats["finish_time"] = datetime.utcnow()
 
         for key, value in stats.items():
             if isinstance(value, datetime):
                 stats[key] = value.isoformat()
 
         with open(logfile, "w") as writer:
-            writer.write(json.dumps(stats, indent=4))
+            writer.write(json.dumps(process_stat_output(stats), indent=4))
 
     def start_requests(self):
         if self.mode == Modes.daily:
@@ -79,7 +87,8 @@ class WeatherSpider(scrapy.Spider):
 
     def parse(self, response, **kwargs):
         if response.status == 429:
-            self.crawler.engine.close_spider(self, reason=response.json())
+            data = response.json()
+            self.crawler.engine.close_spider(self, reason=data["reason"])
             return
 
         data = response.json()
