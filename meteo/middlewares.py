@@ -84,9 +84,6 @@ class MeteoDownloaderMiddleware:
         if response.status == 429:
             settings.END_STATUS = response.status
 
-            with open("scraper-status.txt", "w") as writer:
-                writer.write("429")
-
         return response
 
     def process_exception(self, request, exception, spider):

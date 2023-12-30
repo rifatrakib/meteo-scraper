@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Union
 from urllib.parse import urlencode
@@ -46,6 +46,9 @@ class WeatherSpider(scrapy.Spider):
             self.end_date = datetime.fromisoformat(end_date)
             if self.start_date > self.end_date:
                 raise ValueError("Start date must be earlier than end date.")
+        else:
+            self.start_date = datetime.utcnow() - timedelta(days=2)
+            self.end_date = self.start_date
 
     def closed(self, reason):
         logfile = Path(f"{settings.LOG_STORAGE}/{self.name}.json")
