@@ -1,18 +1,10 @@
 import json
 from datetime import date, timedelta
-from enum import Enum
 from functools import lru_cache
 from typing import Any, Union
 
 from meteo import settings
 from meteo.items import LocationModel, MetricsModel, WeatherItem
-
-
-class Modes(str, Enum):
-    """Modes for the weather spider."""
-
-    daily = "daily"
-    historical = "historical"
 
 
 def prepare_daily_mode_query_params(
@@ -45,18 +37,6 @@ def prepare_daily_mode_query_params(
     params["latitude"] = params["latitude"][:-1]
     params["longitude"] = params["longitude"][:-1]
     return params, cities
-
-
-def prepare_historical_mode_query_params(metrics: list[str], location: LocationModel) -> dict[str, str]:
-    """Prepare the query parameters for the historical mode."""
-    start_date, end_date = settings.HISTORICAL_DATE_RANGE
-    return {
-        "daily": ",".join(metrics),
-        "start_date": start_date,
-        "end_date": end_date,
-        "latitude": location.latitude,
-        "longitude": location.longitude,
-    }
 
 
 @lru_cache()

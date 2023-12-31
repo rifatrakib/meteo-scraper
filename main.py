@@ -8,7 +8,7 @@ from meteo import settings
 
 def start_daily_scraper(today: bool = False):
     if today:
-        command = "scrapy crawl weather -a mode=daily"
+        command = "scrapy crawl weather"
     else:
         try:
             with open("database/downloads/weather.json", encoding="utf-8") as reader:
@@ -20,7 +20,7 @@ def start_daily_scraper(today: bool = False):
             next_date = datetime.fromisoformat(settings.HISTORICAL_DATE_RANGE[0])
 
         next_date = next_date.strftime("%Y-%m-%d")
-        arguments = f"-a mode=daily -a start_date={next_date} -a end_date={next_date}"
+        arguments = f"-a start_date={next_date} -a end_date={next_date}"
         command = f"scrapy crawl weather {arguments}"
 
     print(command)
