@@ -22,7 +22,7 @@ def prepare_daily_mode_query_params(
         end_date = str(end_date)
 
     params = {
-        "daily": ",".join(metrics),
+        "hourly": ",".join(metrics),
         "start_date": start_date,
         "end_date": end_date,
         "latitude": "",
@@ -69,15 +69,19 @@ def reshape_weather_data(data) -> list[WeatherItem]:
     """Reshape the weather data into a list of WeatherItem."""
     weather_data = []
 
-    for day, temp, apparent_temp, rain, snow in zip(*data.values()):
+    for day, temp, rel_hum, dew, apparent_temp, prec, rain, snow, depth in zip(*data.values()):
         weather_data.append(
             WeatherItem(
-                date=day,
+                timestamp=day,
                 metrics=MetricsModel(
                     temperature=temp,
+                    relative_humidity=rel_hum,
+                    dew_point=dew,
                     apparent_temperature=apparent_temp,
+                    precipitation=prec,
                     rainfall=rain,
                     snowfall=snow,
+                    snow_depth=depth,
                 ),
             ),
         )

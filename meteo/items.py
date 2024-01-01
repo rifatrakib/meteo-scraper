@@ -1,6 +1,7 @@
 from datetime import datetime
+from typing import Union
 
-from pydantic import BaseModel, ConfigDict, validator
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseSchema(BaseModel):
@@ -21,18 +22,18 @@ class LocationModel(BaseSchema):
 
 class MetricsModel(BaseSchema):
     temperature: float
+    relative_humidity: float
+    dew_point: float
     apparent_temperature: float
+    precipitation: float
     rainfall: float
     snowfall: float
+    snow_depth: Union[float, None] = None
 
 
 class WeatherItem(BaseSchema):
-    date: datetime
+    timestamp: datetime
     metrics: MetricsModel
-
-    @validator("date", pre=True)
-    def process_timestamp(cls, value):
-        return datetime(*map(int, value.split("-")))
 
 
 class WeatherModel(BaseSchema):

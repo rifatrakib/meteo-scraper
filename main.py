@@ -1,27 +1,28 @@
 import json
 import subprocess
 import time
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from pathlib import Path
 
 from meteo import settings
 
 
 def start_daily_scraper(today: bool = False):
-    if today:
-        command = "scrapy crawl weather"
-    else:
-        try:
-            with open("database/downloads/weather.json", encoding="utf-8") as reader:
-                data = json.loads(reader.read())
+    command = "scrapy crawl weather"
 
-            latest_date = datetime.fromisoformat(data[-1]["date"])
-            next_date = latest_date - timedelta(days=1)
-        except Exception:
-            next_date = datetime.fromisoformat(settings.HISTORICAL_DATE_RANGE[0])
+    if not today:
+        with open(f"{settings.TARGET_STORAGE}/weather.json", encoding="utf-8") as reader:
+            data = json.loads(reader.read())
 
-        next_date = next_date.strftime("%Y-%m-%d")
+        latest_date = datetime.fromisoformat(data[-1]["timestamp"])
+        next_date = latest_date - timedelta(days=1)
+        next_date = next_date.date()
         arguments = f"-a start_date={next_date} -a end_date={next_date}"
         command = f"scrapy crawl weather {arguments}"
+
+    location = Path(f"{settings.LOGS_STORAGE}/weather")
+    Path(location).mkdir(parents=True, exist_ok=True)
+    command += f" 2>&1 | tee {location}/{date.today()}.log"
 
     print(command)
     subprocess.run(command, shell=True)
@@ -35,7 +36,7 @@ if __name__ == "__main__":
         time.sleep(5)
 
         try:
-            with open("database/logs/weather.json") as reader:
+            with open(f"{settings.STATS_STORAGE}/weather.json") as reader:
                 stats = json.loads(reader.read())
 
             finish_time = datetime.fromisoformat(stats["finish_time"])

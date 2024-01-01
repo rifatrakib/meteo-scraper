@@ -16,7 +16,16 @@ class WeatherSpider(scrapy.Spider):
     allowed_domains = ["open-meteo.com"]
     handle_httpstatus_list = [429]
     target_endpoint = "https://archive-api.open-meteo.com/v1/archive"
-    metrics = ["temperature_2m_mean", "apparent_temperature_mean", "rain_sum", "snowfall_sum"]
+    metrics = [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "dew_point_2m",
+        "apparent_temperature",
+        "precipitation",
+        "rain",
+        "snowfall",
+        "snow_depth",
+    ]
     locations: list[LocationModel] = read_locations()
 
     def __init__(
@@ -38,7 +47,7 @@ class WeatherSpider(scrapy.Spider):
             self.end_date = self.start_date
 
     def closed(self, reason):
-        logfile = Path(f"{settings.LOG_STORAGE}/{self.name}.json")
+        logfile = Path(f"{settings.STATS_STORAGE}/{self.name}.json")
         logfile.parent.mkdir(parents=True, exist_ok=True)
         stats = self.crawler.stats.get_stats()
         stats["reason"] = reason
@@ -76,5 +85,5 @@ class WeatherSpider(scrapy.Spider):
         for index, item in enumerate(data):
             yield WeatherModel(
                 location=kwargs.get("location")[index],
-                weather=reshape_weather_data(item["daily"]),
+                weather=reshape_weather_data(item["hourly"]),
             )

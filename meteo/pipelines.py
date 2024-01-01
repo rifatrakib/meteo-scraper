@@ -17,7 +17,7 @@ class MeteoPipeline:
 
     def spider_opened(self, spider):
         self.data = []
-        self.file = Path(f"{spider.settings.get('TARGET_STORAGE')}/{spider.name}.json")
+        self.file = Path(f"{settings.TARGET_STORAGE}/{spider.name}.json")
         self.file.parent.mkdir(parents=True, exist_ok=True)
         self.file.touch(exist_ok=True)
 
@@ -44,11 +44,15 @@ class MeteoPipeline:
                     "country": item.location.country,
                     "latitude": item.location.latitude,
                     "longitude": item.location.longitude,
-                    "date": record.date.strftime("%Y-%m-%d"),
+                    "timestamp": record.timestamp.isoformat(),
                     "temperature": record.metrics.temperature,
+                    "relative_humidity": record.metrics.relative_humidity,
+                    "dew_point": record.metrics.dew_point,
                     "apparent_temperature": record.metrics.apparent_temperature,
+                    "precipitation": record.metrics.precipitation,
                     "rainfall": record.metrics.rainfall,
                     "snowfall": record.metrics.snowfall,
+                    "snow_depth": record.metrics.snow_depth,
                 },
             )
         return item
