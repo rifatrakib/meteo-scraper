@@ -1,7 +1,7 @@
 import json
 import subprocess
 import time
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from meteo import settings
@@ -9,20 +9,20 @@ from meteo import settings
 
 def start_daily_scraper(today: bool = False):
     command = "scrapy crawl weather"
+    log_file = f"{(datetime.utcnow() - timedelta(days=2)).date()}.log"
 
     if not today:
-        with open(f"{settings.TARGET_STORAGE}/weather.json", encoding="utf-8") as reader:
-            data = json.loads(reader.read())
-
-        latest_date = datetime.fromisoformat(data[-1]["timestamp"])
+        files = [file.name.replace(".json", "") for file in Path(f"{settings.TARGET_STORAGE}/weather").glob("**/*.json") if file.is_file()]
+        latest_date = datetime.fromisoformat(files[0])
         next_date = latest_date - timedelta(days=1)
         next_date = next_date.date()
         arguments = f"-a start_date={next_date} -a end_date={next_date}"
         command = f"scrapy crawl weather {arguments}"
+        log_file = f"{next_date}.log"
 
     location = Path(f"{settings.LOGS_STORAGE}/weather")
     Path(location).mkdir(parents=True, exist_ok=True)
-    command += f" 2>&1 | tee {location}/{date.today()}.log"
+    command += f" 2>&1 | tee {location}/{log_file}"
 
     print(command)
     subprocess.run(command, shell=True)
@@ -40,12 +40,16 @@ if __name__ == "__main__":
                 stats = json.loads(reader.read())
 
             finish_time = datetime.fromisoformat(stats["finish_time"])
-            if finish_time.date() != datetime.utcnow().date():
+            current_time = datetime.utcnow()
+
+            if finish_time.date() != current_time.date():
                 continue
+
             if "Hourly" in stats["reason"]:
                 print(stats["reason"])
-                print("Sleeping for an hour...")
-                time.sleep(3600)
+                print("Sleeping till the next hour...")
+                nxt = current_time.replace(hour=current_time.hour + 1, minute=0, second=0, microsecond=0)
+                time.sleep((nxt - current_time).seconds + 1)
             elif "Daily" in stats["reason"]:
                 print(stats["reason"])
                 print("Stopping for today...")

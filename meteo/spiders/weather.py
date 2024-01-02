@@ -47,8 +47,8 @@ class WeatherSpider(scrapy.Spider):
             self.end_date = self.start_date
 
     def closed(self, reason):
-        logfile = Path(f"{settings.STATS_STORAGE}/{self.name}.json")
-        logfile.parent.mkdir(parents=True, exist_ok=True)
+        stat_file = Path(f"{settings.STATS_STORAGE}/{self.name}.json")
+        stat_file.parent.mkdir(parents=True, exist_ok=True)
         stats = self.crawler.stats.get_stats()
         stats["reason"] = reason
         stats["finish_time"] = datetime.utcnow()
@@ -57,7 +57,7 @@ class WeatherSpider(scrapy.Spider):
             if isinstance(value, datetime):
                 stats[key] = value.isoformat()
 
-        with open(logfile, "w") as writer:
+        with open(stat_file, "w") as writer:
             writer.write(json.dumps(process_stat_output(stats), indent=4))
 
     def start_requests(self):

@@ -1,18 +1,10 @@
 from datetime import datetime
 from typing import Union
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
-class BaseSchema(BaseModel):
-    model_config = ConfigDict(
-        json_encoders={
-            datetime: lambda v: v.strftime("%Y-%m-%d"),
-        },
-    )
-
-
-class LocationModel(BaseSchema):
+class LocationModel(BaseModel):
     city: str
     province: str
     country: str
@@ -20,7 +12,7 @@ class LocationModel(BaseSchema):
     longitude: float
 
 
-class MetricsModel(BaseSchema):
+class MetricsModel(BaseModel):
     temperature: float
     relative_humidity: float
     dew_point: float
@@ -31,11 +23,11 @@ class MetricsModel(BaseSchema):
     snow_depth: Union[float, None] = None
 
 
-class WeatherItem(BaseSchema):
+class WeatherItem(BaseModel):
     timestamp: datetime
     metrics: MetricsModel
 
 
-class WeatherModel(BaseSchema):
+class WeatherModel(BaseModel):
     location: LocationModel
     weather: list[WeatherItem]
