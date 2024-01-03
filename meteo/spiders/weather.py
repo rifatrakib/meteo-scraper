@@ -32,10 +32,12 @@ class WeatherSpider(scrapy.Spider):
         self,
         start_date: Union[str, None] = None,
         end_date: Union[str, None] = None,
+        is_cached: bool = False,
         *args,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+        self.is_cached = is_cached
 
         if start_date and end_date:
             self.start_date = datetime.fromisoformat(start_date)
@@ -61,7 +63,13 @@ class WeatherSpider(scrapy.Spider):
             writer.write(json.dumps(process_stat_output(stats), indent=4))
 
     def start_requests(self):
-        for index in range(0, len(self.locations), 10):
+        start_index = 0
+        if self.is_cached:
+            with open(f"{settings.TARGET_STORAGE}/cache/{self.start_date.date()}.json") as reader:
+                data = json.loads(reader.read())
+                start_index = len(data) // 24
+
+        for index in range(start_index, len(self.locations), 10):
             params, cities = prepare_daily_mode_query_params(
                 self.metrics,
                 self.locations[index : index + 10],

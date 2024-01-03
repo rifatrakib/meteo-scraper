@@ -12,13 +12,23 @@ def start_daily_scraper(today: bool = False):
     log_file = f"{(datetime.utcnow() - timedelta(days=2)).date()}.log"
 
     if not today:
-        files = [file.name.replace(".json", "") for file in Path(f"{settings.TARGET_STORAGE}/weather").glob("**/*.json") if file.is_file()]
-        latest_date = datetime.fromisoformat(files[0])
-        next_date = latest_date - timedelta(days=1)
-        next_date = next_date.date()
-        arguments = f"-a start_date={next_date} -a end_date={next_date}"
-        command = f"scrapy crawl weather {arguments}"
-        log_file = f"{next_date}.log"
+        caches = [file.name.replace(".json", "") for file in Path(f"{settings.TARGET_STORAGE}/cache").glob("**/*.json") if file.is_file()]
+        if caches:
+            next_date = datetime.fromisoformat(caches[0])
+            next_date = next_date.date()
+            arguments = f"-a is_cached=true -a start_date={next_date} -a end_date={next_date}"
+            command = f"scrapy crawl weather {arguments}"
+            log_file = f"{next_date}.log"
+        else:
+            files = [
+                file.name.replace(".json", "") for file in Path(f"{settings.TARGET_STORAGE}/weather").glob("**/*.json") if file.is_file()
+            ]
+            latest_date = datetime.fromisoformat(files[0])
+            next_date = latest_date - timedelta(days=1)
+            next_date = next_date.date()
+            arguments = f"-a start_date={next_date} -a end_date={next_date}"
+            command = f"scrapy crawl weather {arguments}"
+            log_file = f"{next_date}.log"
 
     location = Path(f"{settings.LOGS_STORAGE}/weather")
     Path(location).mkdir(parents=True, exist_ok=True)

@@ -22,7 +22,12 @@ class MeteoPipeline:
 
     def spider_closed(self, spider):
         if settings.END_STATUS == 429:
+            self.file.unlink()
+            self.cache_incomplete_session_data(spider)
             return
+
+        if spider.is_cached:
+            self.read_last_session_cache(spider)
 
         with open(self.file, "w", encoding="utf-8") as writer:
             writer.write(json.dumps(self.data, indent=4, ensure_ascii=False))
@@ -48,3 +53,21 @@ class MeteoPipeline:
                 },
             )
         return item
+
+    def cache_incomplete_session_data(self, spider):
+        file_name = self.data[0]["timestamp"]
+        self.file = Path(f"{settings.TARGET_STORAGE}/cache/{file_name}.json")
+        self.file.parent.mkdir(parents=True, exist_ok=True)
+        self.file.touch(exist_ok=True)
+
+        with open(self.file, "w", encoding="utf-8") as writer:
+            writer.write(json.dumps(self.data, indent=4, ensure_ascii=False))
+
+    def read_last_session_cache(self, spider):
+        file_name = self.data[0]["timestamp"]
+        self.cache_file = Path(f"{settings.TARGET_STORAGE}/cache/{file_name}.json")
+        with open(self.cache_file, encoding="utf-8") as reader:
+            data = json.loads(reader.read())
+
+        self.data = data + self.data
+        self.cache_file.unlink()
