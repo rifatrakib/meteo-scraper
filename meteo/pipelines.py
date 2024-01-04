@@ -55,7 +55,7 @@ class MeteoPipeline:
         return item
 
     def cache_incomplete_session_data(self, spider):
-        file_name = self.data[0]["timestamp"]
+        file_name = self.data[0]["timestamp"].split("T")[0]
         self.file = Path(f"{settings.TARGET_STORAGE}/cache/{file_name}.json")
         self.file.parent.mkdir(parents=True, exist_ok=True)
         self.file.touch(exist_ok=True)
@@ -64,7 +64,7 @@ class MeteoPipeline:
             writer.write(json.dumps(self.data, indent=4, ensure_ascii=False))
 
     def read_last_session_cache(self, spider):
-        file_name = self.data[0]["timestamp"]
+        file_name = self.data[0]["timestamp"].split("T")[0]
         self.cache_file = Path(f"{settings.TARGET_STORAGE}/cache/{file_name}.json")
         with open(self.cache_file, encoding="utf-8") as reader:
             data = json.loads(reader.read())
