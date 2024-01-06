@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  scraper:
+    container_name: scraper
+    working_dir: /meteo-scraper
+    build: .
+    volumes:
+      - ./database:/meteo-scraper/database
+    restart: on-failure
